@@ -395,7 +395,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     // Packing and unpacking ctl
     //计算线程池运行状态
     private static int runStateOf(int c) {
-        //RUNNING   111,00000000000000000000000000000
+        //ctl       111,00000000000000000000000000000
         //CAPACITY  000,11111111111111111111111111111
         //~CAPACITY 111,00000000000000000000000000000
         //==        111,00000000000000000000000000000
@@ -405,7 +405,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     //计算工作线程的数量
     private static int workerCountOf(int c) {
-        //RUNNING  111,00000000000000000000000000011
+        //ctl      111,00000000000000000000000000011
         //CAPACITY 000,11111111111111111111111111111
         //==       000,00000000000000000000000000011
 
@@ -418,7 +418,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         //wc  000,00000000000000000000000000000
         //==  111,00000000000000000000000000000
 
-        return rs | wc;
+        return rs | wc; //111,00000000000000000000000000000
     }
 
     /*
@@ -507,7 +507,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * Tracks largest attained pool size. Accessed only under
      * mainLock.
      *
-     * 记录线程池达到过的最大容量
+     * 记录线程池达到过的最大容量:峰值
      */
     private int largestPoolSize;
 
@@ -730,7 +730,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     private void advanceRunState(int targetState) {
         for (; ; ) {
             int c = ctl.get();
-            //判断状态是否已经置为目标值,如果没有,则通过CAS设置状态,如果已设置,直接返回
+            //判断状态是否已经置为目标值或后续值,如果没有,则通过CAS设置状态,如果已设置,直接返回
             if (runStateAtLeast(c, targetState) ||
                     ctl.compareAndSet(c, ctlOf(targetState, workerCountOf(c))))
                 break;
@@ -1017,6 +1017,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 }
             }
         } finally {
+            //worker启动失败的清除工作
             if (!workerStarted)
                 addWorkerFailed(w);
         }
@@ -1394,7 +1395,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         this.maximumPoolSize = maximumPoolSize;
         //工作队列
         this.workQueue = workQueue;
-        //线程空闲存活时间
+        //非核心线程空闲存活时间
         this.keepAliveTime = unit.toNanos(keepAliveTime);
         //线程工厂
         this.threadFactory = threadFactory;
@@ -1448,7 +1449,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             if (addWorker(command, true))
                 //添加成功,返回
                 return;
-            //添加失败,获取ctl:什么情况会添加失败?
+            //添加失败,再次获取ctl
             c = ctl.get();
         }
         //判断线程池状态为RUNNING时,将任务放入队列

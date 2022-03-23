@@ -1,7 +1,10 @@
 package com.yuan.test.map;
 
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author yuan
@@ -9,8 +12,20 @@ import java.util.HashMap;
  */
 public class HashMapTest {
     public static void main(String[] args) {
-        HashMap<String,String> map = new HashMap<>();
 
-        map.put("aa","a");
+        List<Detail> list = new ArrayList<>();
+
+        list.add(new Detail("111","s","fff"));
+        list.add(new Detail("222","ss","fff"));
+        list.add(new Detail("333","sss","fff"));
+        list.add(new Detail("444","ssss","fff"));
+        list.add(new Detail("555","sssss","fff"));
+        list.add(new Detail("666","ssssss","fff"));
+
+
+        Map<String, List<Detail>> collect = list.stream().collect(Collectors.groupingBy(Detail::getCode));
+
+        System.out.println(collect);
+
     }
 }
